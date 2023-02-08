@@ -1,0 +1,22 @@
+app:
+  name: "service-template"
+  version: "1.0.0"
+
+http:
+  port: "8080"
+
+logger:
+  level: "debug"
+  type: "text"
+
+database:
+  driver: "mock"
+
+#database:
+#  driver: "mongo"
+#  uri: "..."
+
+services:
+  logo:
+    base_url: "https://logo.example.com"
+    api_key: "aSuperSecretKey"
