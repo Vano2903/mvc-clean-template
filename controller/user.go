@@ -5,9 +5,9 @@ import (
 
 	"github.com/sirupsen/logrus"
 	"github.com/vano2903/service-template/model"
+	"github.com/vano2903/service-template/providers/logo"
 	"github.com/vano2903/service-template/repo"
 	"github.com/vano2903/service-template/repo/mock"
-	"github.com/vano2903/service-template/services/logo"
 )
 
 var _ UserControllerer = new(UserController)
@@ -15,10 +15,10 @@ var _ UserControllerer = new(UserController)
 type UserController struct {
 	repo repo.UserRepoer
 	logo logo.LogoServicer
-	l    logrus.Logger
+	l    *logrus.Logger
 }
 
-func NewUserController(repo repo.UserRepoer, logo logo.LogoServicer, log logrus.Logger) *UserController {
+func NewUserController(repo repo.UserRepoer, logo logo.LogoServicer, log *logrus.Logger) *UserController {
 	return &UserController{
 		repo: repo,
 		logo: logo,
