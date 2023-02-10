@@ -9,20 +9,19 @@ import (
 	"github.com/vano2903/service-template/repo"
 )
 
-// This step sould be the first step when creating a repo component, check the struct with the interface.
-// To do so in golang you just write this: var _ Interface = new(Struct)
-// If this line of code doesn't compile then your struct doesn't implement the interface.
-var _ repo.UserRepoer = new(RepoMock)
-
-//In this example we are using a custom error statically defined
-//and a custom error defined as a struct.
-
-//The static error is accesible from other packages and they can
-//check if the error returned by a function is the same as the static error.
-
-//The struct error is useful when we need to embed more informationl, for example the ID of the user
-
 var (
+	// This step sould be the first step when creating a repo component, check the struct with the interface.
+	// To do so in golang you just write this: var _ Interface = new(Struct)
+	// If this line of code doesn't compile then your struct doesn't implement the interface.
+	_ repo.UserRepoer = new(RepoMock)
+
+	//In this example we are using a custom error statically defined
+	//and a custom error defined as a struct.
+
+	//The static error is accesible from other packages and they can
+	//check if the error returned by a function is the same as the static error.
+
+	//The struct error is useful when we need to embed more informationl, for example the ID of the user
 	ErrUserUnapdatable = fmt.Errorf("user can't be updated")
 )
 
@@ -59,7 +58,7 @@ func (r *RepoMock) Get(id int) (*model.User, error) {
 	if !ok {
 		err := &ErrUserNotFound{
 			ID:      id,
-			Message: fmt.Sprintf("user with id %d not found", id),
+			Message: fmt.Sprintf("user with id %d is not found", id),
 		}
 		return nil, err
 
