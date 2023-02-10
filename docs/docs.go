@@ -55,7 +55,7 @@ const docTemplate = `{
                                             "type": "integer"
                                         },
                                         "data": {
-                                            "$ref": "#/definitions/httpserver.HttpUnauthorizedUser"
+                                            "$ref": "#/definitions/httpserver.HttpUnauthenticatedUser"
                                         },
                                         "message": {
                                             "type": "string"
@@ -133,7 +133,7 @@ const docTemplate = `{
                 }
             }
         },
-        "httpserver.HttpUnauthorizedUser": {
+        "httpserver.HttpUnauthenticatedUser": {
             "type": "object",
             "properties": {
                 "email": {

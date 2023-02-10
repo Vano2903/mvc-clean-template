@@ -48,7 +48,7 @@
                                             "type": "integer"
                                         },
                                         "data": {
-                                            "$ref": "#/definitions/httpserver.HttpUnauthorizedUser"
+                                            "$ref": "#/definitions/httpserver.HttpUnauthenticatedUser"
                                         },
                                         "message": {
                                             "type": "string"
@@ -126,7 +126,7 @@
                 }
             }
         },
-        "httpserver.HttpUnauthorizedUser": {
+        "httpserver.HttpUnauthenticatedUser": {
             "type": "object",
             "properties": {
                 "email": {

@@ -37,7 +37,7 @@ definitions:
         example: OK
         type: string
     type: object
-  httpserver.HttpUnauthorizedUser:
+  httpserver.HttpUnauthenticatedUser:
     properties:
       email:
         type: string
@@ -82,7 +82,7 @@ paths:
                 code:
                   type: integer
                 data:
-                  $ref: '#/definitions/httpserver.HttpUnauthorizedUser'
+                  $ref: '#/definitions/httpserver.HttpUnauthenticatedUser'
                 message:
                   type: string
               type: object
