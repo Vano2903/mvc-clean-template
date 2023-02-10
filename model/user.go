@@ -8,13 +8,14 @@ package model
 // You choose.
 type (
 	User struct {
-		ID        int    //`json:"id"`
-		FirstName string //`json:"first_name"`
-		LastName  string //`json:"last_name"`
-		Pfp       string //`json:"pfp"`
-		Email     string //`json:"email"`
-		Password  string //`json:"password"`
-		Role      string //`json:"role"`
-		IsBlocked bool   //`json:"is_blocked"`
+		ID                        int    //`json:"id"`
+		FirstName                 string //`json:"first_name"`
+		LastName                  string //`json:"last_name"`
+		Pfp                       string //`json:"pfp"`
+		Email                     string //`json:"email"`
+		Password                  string //`json:"password"`
+		Role                      string //`json:"role"`
+		IsBlocked                 bool   //`json:"is_blocked"`
+		SpecialMagicalSecretField string //`json:"special_magical_secret_field"`
 	}
 )
