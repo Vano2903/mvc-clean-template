@@ -13,7 +13,7 @@ import (
 type (
 	// Here we declare a user model that will be returned by the api
 	// to any unauthorized user as some informations should be visible only to admins
-	HttpUnauthorizedUser struct {
+	HttpUnauthenticatedUser struct {
 		ID        int    `json:"id"`
 		FirstName string `json:"first_name"`
 		LastName  string `json:"last_name"`
@@ -49,7 +49,7 @@ func (h *userHttpHandler) RegisterRoutes() {
 // @Tags			users
 // @Produce		json
 // @Param			id	path		int	true	"User ID"
-// @Success		200	{object}	HttpSuccess{data=HttpUnauthorizedUser,code=int,message=string}
+// @Success		200	{object}	HttpSuccess{data=HttpUnauthenticatedUser,code=int,message=string}
 // @Failure		500	{object}	HttpError
 // @Failure		400	{object}	HttpError
 // @Router			/user/{id} [get]
@@ -74,7 +74,7 @@ func (h *userHttpHandler) GetUnauthorizedUser(c echo.Context) error {
 	}
 
 	//converting the user to the http unauthorized user
-	httpUser := HttpUnauthorizedUser{
+	httpUser := HttpUnauthenticatedUser{
 		ID:        user.ID,
 		FirstName: user.FirstName,
 		LastName:  user.LastName,
