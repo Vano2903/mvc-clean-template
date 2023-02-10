@@ -10,23 +10,23 @@ import (
 	"github.com/vano2903/service-template/repo/mock"
 )
 
-var _ UserControllerer = new(UserController)
+var _ UserControllerer = new(User)
 
-type UserController struct {
+type User struct {
 	repo repo.UserRepoer
 	logo logo.LogoServicer
 	l    *logrus.Logger
 }
 
-func NewUserController(repo repo.UserRepoer, logo logo.LogoServicer, log *logrus.Logger) *UserController {
-	return &UserController{
+func NewUserController(repo repo.UserRepoer, logo logo.LogoServicer, log *logrus.Logger) *User {
+	return &User{
 		repo: repo,
 		logo: logo,
 		l:    log,
 	}
 }
 
-func (c *UserController) CreateUser(firstName, lastName, email, password, role string) (int, error) {
+func (c *User) CreateUser(firstName, lastName, email, password, role string) (int, error) {
 	m := &model.User{
 		FirstName: firstName,
 		LastName:  lastName,
@@ -43,15 +43,15 @@ func (c *UserController) CreateUser(firstName, lastName, email, password, role s
 	return c.repo.Create(m)
 }
 
-func (c *UserController) GetUser(id int) (*model.User, error) {
+func (c *User) GetUser(id int) (*model.User, error) {
 	return c.repo.Get(id)
 }
 
-func (c *UserController) GetAllUsers() ([]*model.User, error) {
+func (c *User) GetAllUsers() ([]*model.User, error) {
 	return c.repo.GetAll()
 }
 
-func (c *UserController) UpdateUser(requesterId int, u *model.User) error {
+func (c *User) UpdateUser(requesterId int, u *model.User) error {
 	requester, err := c.repo.Get(requesterId)
 	if err != nil {
 		//in this case we check if the error is a error not found and we log it
@@ -88,7 +88,7 @@ func (c *UserController) UpdateUser(requesterId int, u *model.User) error {
 	return nil
 }
 
-func (c *UserController) DeleteUser(requesterId, id int) error {
+func (c *User) DeleteUser(requesterId, id int) error {
 	requester, err := c.repo.Get(requesterId)
 	if err != nil {
 		re, ok := err.(*mock.ErrUserNotFound)
@@ -117,7 +117,7 @@ func (c *UserController) DeleteUser(requesterId, id int) error {
 	return nil
 }
 
-func (c *UserController) RegenerateLogo(id int) error {
+func (c *User) RegenerateLogo(id int) error {
 	m, err := c.repo.Get(id)
 	if err != nil {
 		re, ok := err.(*mock.ErrUserNotFound)
