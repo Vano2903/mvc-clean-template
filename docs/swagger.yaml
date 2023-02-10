@@ -1,0 +1,100 @@
+basePath: /api/v1
+definitions:
+  httpserver.HttpError:
+    properties:
+      code:
+        example: 400
+        type: integer
+      details:
+        example: Bad Request With More Info
+        type: string
+      error_doc_url:
+        example: https://example.com/docs/errors/invalid_id
+        type: string
+      error_type:
+        example: invalid_id
+        type: string
+      instance:
+        example: /api/v1/users/1
+        type: string
+      is_error:
+        example: true
+        type: boolean
+      message:
+        example: Bad Request
+        type: string
+    type: object
+  httpserver.HttpSuccess:
+    properties:
+      code:
+        example: 200
+        type: integer
+      data: {}
+      is_error:
+        example: false
+        type: boolean
+      message:
+        example: OK
+        type: string
+    type: object
+  httpserver.HttpUnauthorizedUser:
+    properties:
+      email:
+        type: string
+      first_name:
+        type: string
+      id:
+        type: integer
+      last_name:
+        type: string
+      pfp:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact:
+    email: davidevanoncini2003@gmail.com
+    name: Vano2903
+    url: https://github.com/vano2903
+  description: User Management Service
+  title: Go Service Template
+  version: "1.0"
+paths:
+  /user/{id}:
+    get:
+      description: Get user from ID for unauthorized users
+      operationId: getUnauthorizedUser
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.HttpSuccess'
+            - properties:
+                code:
+                  type: integer
+                data:
+                  $ref: '#/definitions/httpserver.HttpUnauthorizedUser'
+                message:
+                  type: string
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/httpserver.HttpError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/httpserver.HttpError'
+      summary: Get user from ID
+      tags:
+      - users
+swagger: "2.0"
