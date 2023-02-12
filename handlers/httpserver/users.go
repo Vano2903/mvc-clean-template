@@ -41,6 +41,7 @@ func NewUserHttpHandler(e *echo.Group, c *controller.User, l *logrus.Logger) *us
 func (h *userHttpHandler) RegisterRoutes() {
 	//user routes
 	h.e.GET("/:id", h.GetUnauthorizedUser)
+	h.e.GET("/all", h.GetAllUnauthorizedUsers)
 }
 
 // @Summary		Get user from ID
@@ -50,8 +51,8 @@ func (h *userHttpHandler) RegisterRoutes() {
 // @Produce		json
 // @Param			id	path		int	true	"User ID"
 // @Success		200	{object}	HttpSuccess{data=HttpUnauthenticatedUser,code=int,message=string}
-// @Failure		500	{object}	HttpError
 // @Failure		400	{object}	HttpError
+// @Failure		500	{object}	HttpError
 // @Router			/user/{id} [get]
 func (h *userHttpHandler) GetUnauthorizedUser(c echo.Context) error {
 	idParam := c.Param("id")
@@ -83,4 +84,32 @@ func (h *userHttpHandler) GetUnauthorizedUser(c echo.Context) error {
 	}
 
 	return respSuccess(c, 200, "user succesfully retrived", httpUser)
+}
+
+// @Summary		Get all user
+// @Description	Get all unauthorized users
+// @ID				getAllUnauthorizedUser
+// @Tags			users
+// @Produce		json
+// @Success		200	{object}	HttpSuccess{data=[]HttpUnauthenticatedUser,code=int,message=string}
+// @Failure		400	{object}	HttpError
+// @Failure		500	{object}	HttpError
+// @Router			/user/all [get]
+func (h *userHttpHandler) GetAllUnauthorizedUsers(c echo.Context) error {
+	users := h.controller.GetAllUsers()
+	if len(users) == 0 {
+		return respError(c, 404, "no users found", "no users were found for this unauthorized access", "no_users_found")
+	}
+	unauthUser := make([]HttpUnauthenticatedUser, len(users))
+	for _, u := range users {
+		unauthUser = append(unauthUser, HttpUnauthenticatedUser{
+			ID:        u.ID,
+			FirstName: u.FirstName,
+			LastName:  u.LastName,
+			Pfp:       u.Pfp,
+			Email:     u.Email,
+		})
+	}
+
+	return respSuccess(c, 200, "all users succesfully retrived", unauthUser)
 }
