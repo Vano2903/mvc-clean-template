@@ -11,8 +11,9 @@ type (
 	UserRepoer interface {
 		Create(u *model.User) (id int, err error)
 		Get(id int) (*model.User, error)
+		GetByEmail(email string) (*model.User, error)
 		Update(u *model.User) error
 		Delete(id int) error
-		GetAll() ([]*model.User, error)
+		GetAll() []*model.User
 	}
 )

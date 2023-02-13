@@ -30,7 +30,7 @@ type ErrUserNotFound struct {
 	Message string
 }
 
-func (e *ErrUserNotFound) Error() string {
+func (e ErrUserNotFound) Error() string {
 	return e.Message
 }
 
@@ -56,7 +56,7 @@ func (r *RepoMock) Create(u *model.User) (int, error) {
 func (r *RepoMock) Get(id int) (*model.User, error) {
 	u, ok := r.users[id]
 	if !ok {
-		err := &ErrUserNotFound{
+		err := ErrUserNotFound{
 			ID:      id,
 			Message: fmt.Sprintf("user with id %d is not found", id),
 		}
@@ -66,16 +66,28 @@ func (r *RepoMock) Get(id int) (*model.User, error) {
 	return u, nil
 }
 
+func (r *RepoMock) GetByEmail(email string) (*model.User, error) {
+	for _, u := range r.users {
+		if u.Email == email {
+			return u, nil
+		}
+	}
+	err := ErrUserNotFound{
+		Message: fmt.Sprintf("user with email %s is not found", email),
+	}
+	return nil, err
+}
+
 func (r *RepoMock) Update(u *model.User) error {
 	_, ok := r.users[u.ID]
 	if !ok {
-		err := &ErrUserNotFound{
+		err := ErrUserNotFound{
 			ID:      u.ID,
 			Message: fmt.Sprintf("user with id %d not found", u.ID),
 		}
 		return err
 	}
-	if r.users[u.ID].Role == "unapdatable" {
+	if r.users[u.ID].Role == model.RoleUnupdatable {
 		return ErrUserUnapdatable
 	}
 	r.users[u.ID] = u
@@ -85,7 +97,7 @@ func (r *RepoMock) Update(u *model.User) error {
 func (r *RepoMock) Delete(id int) error {
 	_, ok := r.users[id]
 	if !ok {
-		err := &ErrUserNotFound{
+		err := ErrUserNotFound{
 			ID:      id,
 			Message: fmt.Sprintf("user with id %d not found", id),
 		}
@@ -95,10 +107,10 @@ func (r *RepoMock) Delete(id int) error {
 	return nil
 }
 
-func (r *RepoMock) GetAll() ([]*model.User, error) {
+func (r *RepoMock) GetAll() []*model.User {
 	users := make([]*model.User, 0, len(r.users))
 	for _, u := range r.users {
 		users = append(users, u)
 	}
-	return users, nil
+	return users
 }

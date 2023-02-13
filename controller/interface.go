@@ -14,7 +14,7 @@ type (
 	UserControllerer interface {
 		CreateUser(firstName, lastName, email, password, role string) (int, error)
 		GetUser(id int) (*model.User, error)
-		GetAllUsers() ([]*model.User, error)
+		GetAllUsers() []*model.User
 		UpdateUser(requesterId int, u *model.User) error
 		DeleteUser(requesterId int, id int) error
 		RegenerateLogo(id int) error

@@ -15,14 +15,14 @@ import (
 //to name a package after a standard library package (net/http in this case)
 
 // Swagger spec:
-// @title	Go Service Template
-// @version		1.0
-// @description	User Management Service
-// @contact.name Vano2903
-// @contact.url https://github.com/vano2903
-// @contact.email davidevanoncini2003@gmail.com
-// @host			localhost:8080
-// @BasePath		/api/v1
+//	@title			Go Service Template
+//	@version		1.0
+//	@description	User Management Service
+//	@contact.name	Vano2903
+//	@contact.url	https://github.com/vano2903
+//	@contact.email	davidevanoncini2003@gmail.com
+//	@host			localhost:8080
+//	@BasePath		/api/v1
 func InitRouter(e *echo.Echo, l *logrus.Logger, userController *controller.User) {
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())

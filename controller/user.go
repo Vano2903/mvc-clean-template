@@ -12,6 +12,10 @@ import (
 
 var _ UserControllerer = new(User)
 
+var (
+	ErrUserAlreadyExists = errors.New("user already exists")
+)
+
 type User struct {
 	repo repo.UserRepoer
 	logo logo.LogoServicer
@@ -27,6 +31,13 @@ func NewUserController(repo repo.UserRepoer, logo logo.LogoServicer, log *logrus
 }
 
 func (c *User) CreateUser(firstName, lastName, email, password, role string) (int, error) {
+
+	//here we check if the user already exists
+	_, err := c.repo.GetByEmail(email)
+	if err == nil {
+		return -1, ErrUserAlreadyExists
+	}
+
 	m := &model.User{
 		FirstName: firstName,
 		LastName:  lastName,
@@ -34,7 +45,7 @@ func (c *User) CreateUser(firstName, lastName, email, password, role string) (in
 		Password:  password,
 		Role:      role,
 	}
-	var err error
+
 	m.Pfp, err = c.logo.GenerateLogo()
 	if err != nil {
 		c.l.Errorf("controller.CreateUser: unexpected error in logo.GenerateLogo: %v", err)
@@ -47,7 +58,7 @@ func (c *User) GetUser(id int) (*model.User, error) {
 	return c.repo.Get(id)
 }
 
-func (c *User) GetAllUsers() ([]*model.User, error) {
+func (c *User) GetAllUsers() []*model.User {
 	return c.repo.GetAll()
 }
 
@@ -68,7 +79,7 @@ func (c *User) UpdateUser(requesterId int, u *model.User) error {
 		}
 	}
 
-	if requester.ID == u.ID || requester.Role == "admin" {
+	if requester.ID == u.ID || requester.Role == model.RoleAdmin {
 		err = c.repo.Update(u)
 		if err != nil {
 			re, ok := err.(*mock.ErrUserNotFound)
@@ -101,7 +112,7 @@ func (c *User) DeleteUser(requesterId, id int) error {
 		}
 	}
 
-	if requester.ID == id || requester.Role == "admin" {
+	if requester.ID == id || requester.Role == model.RoleAdmin {
 		err = c.repo.Delete(id)
 		if err != nil {
 			re, ok := err.(*mock.ErrUserNotFound)

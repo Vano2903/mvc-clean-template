@@ -1,5 +1,10 @@
 basePath: /api/v1
 definitions:
+  httpserver.CreateNewUser.HttpNewUserPostResponse:
+    properties:
+      id:
+        type: integer
+    type: object
   httpserver.HttpError:
     properties:
       code:
@@ -22,6 +27,17 @@ definitions:
         type: boolean
       message:
         example: Bad Request
+        type: string
+    type: object
+  httpserver.HttpNewUserPost:
+    properties:
+      email:
+        type: string
+      first_name:
+        type: string
+      last_name:
+        type: string
+      password:
         type: string
     type: object
   httpserver.HttpSuccess:
@@ -95,6 +111,77 @@ paths:
           schema:
             $ref: '#/definitions/httpserver.HttpError'
       summary: Get user from ID
+      tags:
+      - users
+  /user/all:
+    get:
+      description: Get all unauthorized users
+      operationId: getAllUnauthorizedUser
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.HttpSuccess'
+            - properties:
+                code:
+                  type: integer
+                data:
+                  items:
+                    $ref: '#/definitions/httpserver.HttpUnauthenticatedUser'
+                  type: array
+                message:
+                  type: string
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/httpserver.HttpError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/httpserver.HttpError'
+      summary: Get all user
+      tags:
+      - users
+  /user/register:
+    post:
+      description: Register a new user
+      operationId: CreateNewUser
+      parameters:
+      - description: User Informations
+        in: body
+        name: account
+        required: true
+        schema:
+          $ref: '#/definitions/httpserver.HttpNewUserPost'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.HttpSuccess'
+            - properties:
+                code:
+                  type: integer
+                data:
+                  $ref: '#/definitions/httpserver.CreateNewUser.HttpNewUserPostResponse'
+                message:
+                  type: string
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/httpserver.HttpError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/httpserver.HttpError'
+      summary: Register a new user
       tags:
       - users
 swagger: "2.0"

@@ -15,7 +15,13 @@ type (
 		Email                     string //`json:"email"`
 		Password                  string //`json:"password"`
 		Role                      string //`json:"role"`
-		IsBlocked                 bool   //`json:"is_blocked"`
+		IsBanned                  bool   //`json:"is_banned"`
 		SpecialMagicalSecretField string //`json:"special_magical_secret_field"`
 	}
+)
+
+const (
+	RoleAdmin       = "admin"
+	RoleUser        = "user"
+	RoleUnupdatable = "unupdatable"
 )
