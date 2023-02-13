@@ -7,6 +7,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/sirupsen/logrus"
 	"github.com/vano2903/service-template/controller"
+	"github.com/vano2903/service-template/model"
 	"github.com/vano2903/service-template/repo/mock"
 )
 
@@ -21,6 +22,13 @@ type (
 		Email     string `json:"email"`
 	}
 	// We are not going to declare a model for the authorized request as we will just return the model
+
+	HttpNewUserPost struct {
+		FirstName string `json:"first_name"`
+		LastName  string `json:"last_name"`
+		Email     string `json:"email"`
+		Password  string `json:"password"`
+	}
 
 	userHttpHandler struct {
 		e          *echo.Group
@@ -42,18 +50,19 @@ func (h *userHttpHandler) RegisterRoutes() {
 	//user routes
 	h.e.GET("/:id", h.GetUnauthorizedUser)
 	h.e.GET("/all", h.GetAllUnauthorizedUsers)
+	h.e.POST("/register", h.CreateNewUser)
 }
 
-// @Summary		Get user from ID
-// @Description	Get user from ID for unauthorized users
-// @ID				getUnauthorizedUser
-// @Tags			users
-// @Produce		json
-// @Param			id	path		int	true	"User ID"
-// @Success		200	{object}	HttpSuccess{data=HttpUnauthenticatedUser,code=int,message=string}
-// @Failure		400	{object}	HttpError
-// @Failure		500	{object}	HttpError
-// @Router			/user/{id} [get]
+//	@Summary		Get user from ID
+//	@Description	Get user from ID for unauthorized users
+//	@ID				getUnauthorizedUser
+//	@Tags			users
+//	@Produce		json
+//	@Param			id	path		int	true	"User ID"
+//	@Success		200	{object}	HttpSuccess{data=HttpUnauthenticatedUser,code=int,message=string}
+//	@Failure		400	{object}	HttpError
+//	@Failure		500	{object}	HttpError
+//	@Router			/user/{id} [get]
 func (h *userHttpHandler) GetUnauthorizedUser(c echo.Context) error {
 	idParam := c.Param("id")
 	id, err := strconv.Atoi(idParam)
@@ -86,15 +95,15 @@ func (h *userHttpHandler) GetUnauthorizedUser(c echo.Context) error {
 	return respSuccess(c, 200, "user succesfully retrived", httpUser)
 }
 
-// @Summary		Get all user
-// @Description	Get all unauthorized users
-// @ID				getAllUnauthorizedUser
-// @Tags			users
-// @Produce		json
-// @Success		200	{object}	HttpSuccess{data=[]HttpUnauthenticatedUser,code=int,message=string}
-// @Failure		400	{object}	HttpError
-// @Failure		500	{object}	HttpError
-// @Router			/user/all [get]
+//	@Summary		Get all user
+//	@Description	Get all unauthorized users
+//	@ID				getAllUnauthorizedUser
+//	@Tags			users
+//	@Produce		json
+//	@Success		200	{object}	HttpSuccess{data=[]HttpUnauthenticatedUser,code=int,message=string}
+//	@Failure		400	{object}	HttpError
+//	@Failure		500	{object}	HttpError
+//	@Router			/user/all [get]
 func (h *userHttpHandler) GetAllUnauthorizedUsers(c echo.Context) error {
 	users := h.controller.GetAllUsers()
 	if len(users) == 0 {
@@ -112,4 +121,36 @@ func (h *userHttpHandler) GetAllUnauthorizedUsers(c echo.Context) error {
 	}
 
 	return respSuccess(c, 200, "all users succesfully retrived", unauthUser)
+}
+
+//	@Summary		Register a new user
+//	@Description	Register a new user
+//	@ID				CreateNewUser
+//	@Tags			users
+//	@Produce		json
+//	@Param			account	body		HttpNewUserPost	true	"User Informations"
+//	@Success		200		{object}	HttpSuccess{data=httpserver.CreateNewUser.HttpNewUserPostResponse,code=int,message=string}
+//	@Failure		400		{object}	HttpError
+//	@Failure		500		{object}	HttpError
+//	@Router			/user/register [POST]
+func (h *userHttpHandler) CreateNewUser(c echo.Context) error {
+	body := HttpNewUserPost{}
+	if err := c.Bind(&body); err != nil {
+		return respError(c, 400, "invalid body", fmt.Sprintf("invalid body: %v", err), "invalid_body")
+	}
+
+	newUserID, err := h.controller.CreateUser(body.FirstName, body.LastName, body.Email, body.Password, model.RoleUser)
+	if err != nil {
+		if err == controller.ErrUserAlreadyExists {
+			return respError(c, 400, "user already exists", fmt.Sprintf("user with email %s already exists", body.Email), "user_already_exists")
+		} else {
+			return respError(c, 500, "unexpected error", fmt.Sprintf("unexpected error trying to create user %s", body.Email), "unexpected_error")
+		}
+	}
+
+	type HttpNewUserPostResponse struct {
+		ID int `json:"id"`
+	}
+
+	return respSuccess(c, 200, "user succesfully created", HttpNewUserPostResponse{ID: newUserID})
 }
