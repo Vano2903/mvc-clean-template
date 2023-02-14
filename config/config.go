@@ -21,7 +21,8 @@ type (
 	}
 
 	HTTP struct {
-		Port string `env-required:"true" yaml:"port" env:"HTTP_PORT"`
+		Port      string `env-required:"true" yaml:"port" env:"HTTP_PORT"`
+		JWTSecret string `env-required:"true" yaml:"jwtSecret" env:"JWT_SECRET"`
 	}
 
 	Log struct {

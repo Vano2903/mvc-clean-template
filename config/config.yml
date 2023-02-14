@@ -4,6 +4,7 @@ app:
 
 http:
   port: "8080"
+  jwtSecret: "secret"
 
 logger:
   level: "debug"
