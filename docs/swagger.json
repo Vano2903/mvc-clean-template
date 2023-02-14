@@ -15,7 +15,7 @@
     "paths": {
         "/user/all": {
             "get": {
-                "description": "Get all unauthorized users",
+                "description": "Get all user for an unauthorized user",
                 "produces": [
                     "application/json"
                 ],
@@ -52,8 +52,155 @@
                             ]
                         }
                     },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/httpserver.HttpError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/httpserver.HttpError"
+                        }
+                    }
+                }
+            }
+        },
+        "/user/login": {
+            "post": {
+                "description": "Login user given email and password",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "Login",
+                "operationId": "LoginUser",
+                "parameters": [
+                    {
+                        "description": "email and password",
+                        "name": "credentials",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/httpserver.HttpLoginUserPost"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/httpserver.HttpSuccess"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "code": {
+                                            "type": "integer"
+                                        },
+                                        "data": {
+                                            "$ref": "#/definitions/httpserver.LoginUser.HttpLoginUserPostResponse"
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
                     "400": {
                         "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/httpserver.HttpError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/httpserver.HttpError"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/httpserver.HttpError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/httpserver.HttpError"
+                        }
+                    }
+                }
+            }
+        },
+        "/user/me": {
+            "post": {
+                "description": "Get authenticated user info from jwt",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "Get user info",
+                "operationId": "GetUserInfo",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "default": "token=xxx.xxx.xxx",
+                        "description": "jwt token",
+                        "name": "Cookie",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/httpserver.HttpSuccess"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "code": {
+                                            "type": "integer"
+                                        },
+                                        "data": {
+                                            "$ref": "#/definitions/model.User"
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/httpserver.HttpError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/httpserver.HttpError"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
                         "schema": {
                             "$ref": "#/definitions/httpserver.HttpError"
                         }
@@ -180,6 +327,12 @@
                             "$ref": "#/definitions/httpserver.HttpError"
                         }
                     },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/httpserver.HttpError"
+                        }
+                    },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
@@ -229,6 +382,17 @@
                 "message": {
                     "type": "string",
                     "example": "Bad Request"
+                }
+            }
+        },
+        "httpserver.HttpLoginUserPost": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
                 }
             }
         },
@@ -283,6 +447,55 @@
                     "type": "string"
                 },
                 "pfp": {
+                    "type": "string"
+                }
+            }
+        },
+        "httpserver.LoginUser.HttpLoginUserPostResponse": {
+            "type": "object",
+            "properties": {
+                "token": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.User": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "description": "`json:\"email\"`",
+                    "type": "string"
+                },
+                "firstName": {
+                    "description": "`json:\"first_name\"`",
+                    "type": "string"
+                },
+                "id": {
+                    "description": "`json:\"id\"`",
+                    "type": "integer"
+                },
+                "isBanned": {
+                    "description": "`json:\"is_banned\"`",
+                    "type": "boolean"
+                },
+                "lastName": {
+                    "description": "`json:\"last_name\"`",
+                    "type": "string"
+                },
+                "password": {
+                    "description": "`json:\"password\"`",
+                    "type": "string"
+                },
+                "pfp": {
+                    "description": "`json:\"pfp\"`",
+                    "type": "string"
+                },
+                "role": {
+                    "description": "`json:\"role\"`",
+                    "type": "string"
+                },
+                "specialMagicalSecretField": {
+                    "description": "`json:\"special_magical_secret_field\"`",
                     "type": "string"
                 }
             }

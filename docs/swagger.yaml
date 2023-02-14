@@ -29,6 +29,13 @@ definitions:
         example: Bad Request
         type: string
     type: object
+  httpserver.HttpLoginUserPost:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    type: object
   httpserver.HttpNewUserPost:
     properties:
       email:
@@ -64,6 +71,41 @@ definitions:
       last_name:
         type: string
       pfp:
+        type: string
+    type: object
+  httpserver.LoginUser.HttpLoginUserPostResponse:
+    properties:
+      token:
+        type: string
+    type: object
+  model.User:
+    properties:
+      email:
+        description: '`json:"email"`'
+        type: string
+      firstName:
+        description: '`json:"first_name"`'
+        type: string
+      id:
+        description: '`json:"id"`'
+        type: integer
+      isBanned:
+        description: '`json:"is_banned"`'
+        type: boolean
+      lastName:
+        description: '`json:"last_name"`'
+        type: string
+      password:
+        description: '`json:"password"`'
+        type: string
+      pfp:
+        description: '`json:"pfp"`'
+        type: string
+      role:
+        description: '`json:"role"`'
+        type: string
+      specialMagicalSecretField:
+        description: '`json:"special_magical_secret_field"`'
         type: string
     type: object
 host: localhost:8080
@@ -106,6 +148,10 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/httpserver.HttpError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/httpserver.HttpError'
         "500":
           description: Internal Server Error
           schema:
@@ -115,7 +161,7 @@ paths:
       - users
   /user/all:
     get:
-      description: Get all unauthorized users
+      description: Get all user for an unauthorized user
       operationId: getAllUnauthorizedUser
       produces:
       - application/json
@@ -135,8 +181,8 @@ paths:
                 message:
                   type: string
               type: object
-        "400":
-          description: Bad Request
+        "404":
+          description: Not Found
           schema:
             $ref: '#/definitions/httpserver.HttpError'
         "500":
@@ -144,6 +190,98 @@ paths:
           schema:
             $ref: '#/definitions/httpserver.HttpError'
       summary: Get all user
+      tags:
+      - users
+  /user/login:
+    post:
+      description: Login user given email and password
+      operationId: LoginUser
+      parameters:
+      - description: email and password
+        in: body
+        name: credentials
+        required: true
+        schema:
+          $ref: '#/definitions/httpserver.HttpLoginUserPost'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.HttpSuccess'
+            - properties:
+                code:
+                  type: integer
+                data:
+                  $ref: '#/definitions/httpserver.LoginUser.HttpLoginUserPostResponse'
+                message:
+                  type: string
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/httpserver.HttpError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/httpserver.HttpError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/httpserver.HttpError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/httpserver.HttpError'
+      summary: Login
+      tags:
+      - users
+  /user/me:
+    post:
+      description: Get authenticated user info from jwt
+      operationId: GetUserInfo
+      parameters:
+      - default: token=xxx.xxx.xxx
+        description: jwt token
+        in: header
+        name: Cookie
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.HttpSuccess'
+            - properties:
+                code:
+                  type: integer
+                data:
+                  $ref: '#/definitions/model.User'
+                message:
+                  type: string
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/httpserver.HttpError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/httpserver.HttpError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/httpserver.HttpError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/httpserver.HttpError'
+      summary: Get user info
       tags:
       - users
   /user/register:
