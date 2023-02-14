@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"strconv"
 
-	echojwt "github.com/labstack/echo-jwt"
 	"github.com/labstack/echo/v4"
 	"github.com/sirupsen/logrus"
 	"github.com/vano2903/service-template/controller"
@@ -62,14 +61,7 @@ func (h *userHttpHandler) RegisterRoutes() {
 	h.e.POST("/register", h.CreateNewUser)
 	h.e.POST("/login", h.LoginUser)
 
-	jwtMiddleware := echojwt.WithConfig(echojwt.Config{
-		SigningKey: h.j.SigningKey,
-		ErrorHandler: func(c echo.Context, err error) error {
-			return respError(c, 401, "unauthorized", "invalid token", "invalid_token")
-		},
-	})
-
-	h.e.GET("/me", h.GetUserInfo, jwtMiddleware)
+	h.e.GET("/me", h.GetUserInfo, h.jwtHeaderCheckerMiddleware)
 }
 
 // @Summary		Get user from ID
@@ -211,6 +203,7 @@ func (h *userHttpHandler) LoginUser(c echo.Context) error {
 		h.l.Errorf("unexpected error trying to sign jwt token for user %s: %v", body.Email, err)
 		return respError(c, 500, "unexpected error", "unexpected error trying to generate your login token", "unexpected_error")
 	}
+	h.l.Debugf("token generated for user %s: %s", body.Email, jwtString)
 
 	type HttpLoginUserPostResponse struct {
 		Token string `json:"token"`
@@ -224,7 +217,7 @@ func (h *userHttpHandler) LoginUser(c echo.Context) error {
 // @ID				GetUserInfo
 // @Tags			users
 // @Produce		json
-// @Param Cookie header string  true "jwt token"     default(token=xxx.xxx.xxx)
+// @Param Authorization header string  true "jwt token"     default(Bearer xxx.xxx.xxx)
 // @Success		200			{object}	HttpSuccess{data=model.User,code=int,message=string}
 // @Failure		400			{object}	HttpError
 // @Failure		401			{object}	HttpError
@@ -232,21 +225,13 @@ func (h *userHttpHandler) LoginUser(c echo.Context) error {
 // @Failure		500			{object}	HttpError
 // @Router			/user/me [POST]
 func (h *userHttpHandler) GetUserInfo(c echo.Context) error {
-	//get the token from the token cookie
-	tokenCookie, err := c.Cookie("token")
+	//it wont panic because the middleware already checked it
+	authHeader := c.Request().Header.Get("Authorization")[7:]
+
+	//we do not do the full check as the middleware already did it
+	//we just get the claims and handle the error
+	claims, err := h.j.ValidateToken(authHeader)
 	if err != nil {
-		return respError(c, 401, "missing cookie", "missing cookie, check if token cookie is still set", "missing_token")
-	}
-	token := tokenCookie.Value
-	claims, err := h.j.ValidateToken(token)
-	if err != nil {
-		expired, err := h.j.IsTokenExpired(token)
-		if err != nil {
-			return respError(c, 500, "unexpected error", "unexpected error trying to validate your token", "unexpected_error")
-		}
-		if expired {
-			return respError(c, 401, "token expired", "your token has expired, please login again", "token_expired")
-		}
 		return respError(c, 401, "invalid token", "invalid token", "invalid_token")
 	}
 
