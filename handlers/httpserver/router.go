@@ -6,7 +6,9 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/sirupsen/logrus"
 	echoSwagger "github.com/swaggo/echo-swagger"
+	"github.com/vano2903/service-template/config"
 	"github.com/vano2903/service-template/controller"
+	"github.com/vano2903/service-template/pkg/jwt"
 
 	_ "github.com/vano2903/service-template/docs"
 )
@@ -15,6 +17,7 @@ import (
 //to name a package after a standard library package (net/http in this case)
 
 // Swagger spec:
+//
 //	@title			Go Service Template
 //	@version		1.0
 //	@description	User Management Service
@@ -23,7 +26,7 @@ import (
 //	@contact.email	davidevanoncini2003@gmail.com
 //	@host			localhost:8080
 //	@BasePath		/api/v1
-func InitRouter(e *echo.Echo, l *logrus.Logger, userController *controller.User) {
+func InitRouter(e *echo.Echo, l *logrus.Logger, userController *controller.User, conf *config.Config) {
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 
@@ -35,6 +38,8 @@ func InitRouter(e *echo.Echo, l *logrus.Logger, userController *controller.User)
 
 	//user routes
 
-	userHttpHandler := NewUserHttpHandler(user, userController, l)
+	jwtHandler := jwt.NewJWThandler(conf.HTTP.JWTSecret, conf.App.Name+":"+conf.App.Version)
+
+	userHttpHandler := NewUserHttpHandler(user, userController, l, jwtHandler)
 	userHttpHandler.RegisterRoutes()
 }
