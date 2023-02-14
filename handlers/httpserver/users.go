@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strconv"
 
+	echojwt "github.com/labstack/echo-jwt"
 	"github.com/labstack/echo/v4"
 	"github.com/sirupsen/logrus"
 	"github.com/vano2903/service-template/controller"
@@ -60,19 +61,28 @@ func (h *userHttpHandler) RegisterRoutes() {
 	h.e.GET("/all", h.GetAllUnauthorizedUsers)
 	h.e.POST("/register", h.CreateNewUser)
 	h.e.POST("/login", h.LoginUser)
+
+	jwtMiddleware := echojwt.WithConfig(echojwt.Config{
+		SigningKey: h.j.SigningKey,
+		ErrorHandler: func(c echo.Context, err error) error {
+			return respError(c, 401, "unauthorized", "invalid token", "invalid_token")
+		},
+	})
+
+	h.e.GET("/me", h.GetUserInfo, jwtMiddleware)
 }
 
-//	@Summary		Get user from ID
-//	@Description	Get user from ID for unauthorized users
-//	@ID				getUnauthorizedUser
-//	@Tags			users
-//	@Produce		json
-//	@Param			id	path		int	true	"User ID"
-//	@Success		200	{object}	HttpSuccess{data=HttpUnauthenticatedUser,code=int,message=string}
-//	@Failure		400	{object}	HttpError
-//	@Failure		404	{object}	HttpError
-//	@Failure		500	{object}	HttpError
-//	@Router			/user/{id} [get]
+// @Summary		Get user from ID
+// @Description	Get user from ID for unauthorized users
+// @ID				getUnauthorizedUser
+// @Tags			users
+// @Produce		json
+// @Param			id	path		int	true	"User ID"
+// @Success		200	{object}	HttpSuccess{data=HttpUnauthenticatedUser,code=int,message=string}
+// @Failure		400	{object}	HttpError
+// @Failure		404	{object}	HttpError
+// @Failure		500	{object}	HttpError
+// @Router			/user/{id} [get]
 func (h *userHttpHandler) GetUnauthorizedUser(c echo.Context) error {
 	idParam := c.Param("id")
 	id, err := strconv.Atoi(idParam)
@@ -105,15 +115,15 @@ func (h *userHttpHandler) GetUnauthorizedUser(c echo.Context) error {
 	return respSuccess(c, 200, "user succesfully retrived", httpUser)
 }
 
-//	@Summary		Get all user
-//	@Description	Get all user for an unauthorized user
-//	@ID				getAllUnauthorizedUser
-//	@Tags			users
-//	@Produce		json
-//	@Success		200	{object}	HttpSuccess{data=[]HttpUnauthenticatedUser,code=int,message=string}
-//	@Failure		404	{object}	HttpError
-//	@Failure		500	{object}	HttpError
-//	@Router			/user/all [get]
+// @Summary		Get all user
+// @Description	Get all user for an unauthorized user
+// @ID				getAllUnauthorizedUser
+// @Tags			users
+// @Produce		json
+// @Success		200	{object}	HttpSuccess{data=[]HttpUnauthenticatedUser,code=int,message=string}
+// @Failure		404	{object}	HttpError
+// @Failure		500	{object}	HttpError
+// @Router			/user/all [get]
 func (h *userHttpHandler) GetAllUnauthorizedUsers(c echo.Context) error {
 	users := h.controller.GetAllUsers()
 	if len(users) == 0 {
@@ -133,16 +143,16 @@ func (h *userHttpHandler) GetAllUnauthorizedUsers(c echo.Context) error {
 	return respSuccess(c, 200, "all users succesfully retrived", unauthUser)
 }
 
-//	@Summary		Register a new user
-//	@Description	Register a new user
-//	@ID				CreateNewUser
-//	@Tags			users
-//	@Produce		json
-//	@Param			account	body		HttpNewUserPost	true	"User Informations"
-//	@Success		200		{object}	HttpSuccess{data=httpserver.CreateNewUser.HttpNewUserPostResponse,code=int,message=string}
-//	@Failure		400		{object}	HttpError
-//	@Failure		500		{object}	HttpError
-//	@Router			/user/register [POST]
+// @Summary		Register a new user
+// @Description	Register a new user
+// @ID				CreateNewUser
+// @Tags			users
+// @Produce		json
+// @Param			account	body		HttpNewUserPost	true	"User Informations"
+// @Success		200		{object}	HttpSuccess{data=httpserver.CreateNewUser.HttpNewUserPostResponse,code=int,message=string}
+// @Failure		400		{object}	HttpError
+// @Failure		500		{object}	HttpError
+// @Router			/user/register [POST]
 func (h *userHttpHandler) CreateNewUser(c echo.Context) error {
 	body := HttpNewUserPost{}
 	if err := c.Bind(&body); err != nil {
@@ -165,18 +175,18 @@ func (h *userHttpHandler) CreateNewUser(c echo.Context) error {
 	return respSuccess(c, 200, "user succesfully created", HttpNewUserPostResponse{ID: newUserID})
 }
 
-//	@Summary		Login
-//	@Description	Login user given email and password
-//	@ID				LoginUser
-//	@Tags			users
-//	@Produce		json
-//	@Param			credentials	body		HttpLoginUserPost	true	"email and password"
-//	@Success		200			{object}	HttpSuccess{data=httpserver.LoginUser.HttpLoginUserPostResponse,code=int,message=string}
-//	@Failure		400			{object}	HttpError
-//	@Failure		401			{object}	HttpError
-//	@Failure		404			{object}	HttpError
-//	@Failure		500			{object}	HttpError
-//	@Router			/user/register [POST]
+// @Summary		Login
+// @Description	Login user given email and password
+// @ID				LoginUser
+// @Tags			users
+// @Produce		json
+// @Param			credentials	body		HttpLoginUserPost	true	"email and password"
+// @Success		200			{object}	HttpSuccess{data=httpserver.LoginUser.HttpLoginUserPostResponse,code=int,message=string}
+// @Failure		400			{object}	HttpError
+// @Failure		401			{object}	HttpError
+// @Failure		404			{object}	HttpError
+// @Failure		500			{object}	HttpError
+// @Router			/user/login [POST]
 func (h *userHttpHandler) LoginUser(c echo.Context) error {
 	body := HttpLoginUserPost{}
 	if err := c.Bind(&body); err != nil {
@@ -207,4 +217,47 @@ func (h *userHttpHandler) LoginUser(c echo.Context) error {
 	}
 
 	return respSuccess(c, 200, "user succesfully logged in", HttpLoginUserPostResponse{Token: jwtString})
+}
+
+// @Summary		Get user info
+// @Description	Get authenticated user info from jwt
+// @ID				GetUserInfo
+// @Tags			users
+// @Produce		json
+// @Param Cookie header string  true "jwt token"     default(token=xxx.xxx.xxx)
+// @Success		200			{object}	HttpSuccess{data=model.User,code=int,message=string}
+// @Failure		400			{object}	HttpError
+// @Failure		401			{object}	HttpError
+// @Failure		404			{object}	HttpError
+// @Failure		500			{object}	HttpError
+// @Router			/user/me [POST]
+func (h *userHttpHandler) GetUserInfo(c echo.Context) error {
+	//get the token from the token cookie
+	tokenCookie, err := c.Cookie("token")
+	if err != nil {
+		return respError(c, 401, "missing cookie", "missing cookie, check if token cookie is still set", "missing_token")
+	}
+	token := tokenCookie.Value
+	claims, err := h.j.ValidateToken(token)
+	if err != nil {
+		expired, err := h.j.IsTokenExpired(token)
+		if err != nil {
+			return respError(c, 500, "unexpected error", "unexpected error trying to validate your token", "unexpected_error")
+		}
+		if expired {
+			return respError(c, 401, "token expired", "your token has expired, please login again", "token_expired")
+		}
+		return respError(c, 401, "invalid token", "invalid token", "invalid_token")
+	}
+
+	user, err := h.controller.GetUser(claims.UserId)
+	if err != nil {
+		if err == controller.ErrUserNotFound {
+			return respError(c, 404, "user not found", fmt.Sprintf("there is no user with %d as id", claims.UserId), "user_not_found")
+		} else {
+			return respError(c, 500, "unexpected error", fmt.Sprintf("unexpected error trying to retrive user %d", claims.UserId), "unexpected_error")
+		}
+	}
+
+	return respSuccess(c, 200, "user succesfully retrived", user)
 }
