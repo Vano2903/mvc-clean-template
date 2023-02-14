@@ -243,10 +243,10 @@ paths:
       description: Get authenticated user info from jwt
       operationId: GetUserInfo
       parameters:
-      - default: token=xxx.xxx.xxx
+      - default: Bearer xxx.xxx.xxx
         description: jwt token
         in: header
-        name: Cookie
+        name: Authorization
         required: true
         type: string
       produces:

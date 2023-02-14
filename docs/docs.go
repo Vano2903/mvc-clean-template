@@ -162,9 +162,9 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "default": "token=xxx.xxx.xxx",
+                        "default": "Bearer xxx.xxx.xxx",
                         "description": "jwt token",
-                        "name": "Cookie",
+                        "name": "Authorization",
                         "in": "header",
                         "required": true
                     }
