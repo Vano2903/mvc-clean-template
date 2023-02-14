@@ -18,5 +18,6 @@ type (
 		UpdateUser(requesterId int, u *model.User) error
 		DeleteUser(requesterId int, id int) error
 		RegenerateLogo(id int) error
+		CheckCredentials(email, password string) (int, error)
 	}
 )

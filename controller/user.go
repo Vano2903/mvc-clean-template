@@ -14,6 +14,8 @@ var _ UserControllerer = new(User)
 
 var (
 	ErrUserAlreadyExists = errors.New("user already exists")
+	ErrUserNotFound      = errors.New("user not found")
+	ErrWrongPassword     = errors.New("wrong password")
 )
 
 type User struct {
@@ -72,7 +74,7 @@ func (c *User) UpdateUser(requesterId int, u *model.User) error {
 		if ok {
 			//here we log the error and return a generic one
 			c.l.Errorf("user with id %d not found", re.ID)
-			return errors.New("user not found")
+			return ErrUserNotFound
 		} else {
 			c.l.Errorf("controller.UpdateUser: unexpected error in repo.Get: %v", err)
 			return errors.New("unexpected error")
@@ -85,7 +87,7 @@ func (c *User) UpdateUser(requesterId int, u *model.User) error {
 			re, ok := err.(*mock.ErrUserNotFound)
 			if ok {
 				c.l.Errorf("user with id %d not found", re.ID)
-				return errors.New("user not found")
+				return ErrUserNotFound
 
 			} else if err == mock.ErrUserUnapdatable {
 				return errors.New("user can't be updated")
@@ -105,7 +107,7 @@ func (c *User) DeleteUser(requesterId, id int) error {
 		re, ok := err.(*mock.ErrUserNotFound)
 		if ok {
 			c.l.Errorf("user with id %d not found", re.ID)
-			return errors.New("user not found")
+			return ErrUserNotFound
 		} else {
 			c.l.Errorf("controller.DeleteUser: unexpected error in repo.Get: %v", err)
 			return errors.New("unexpected error")
@@ -118,7 +120,7 @@ func (c *User) DeleteUser(requesterId, id int) error {
 			re, ok := err.(*mock.ErrUserNotFound)
 			if ok {
 				c.l.Errorf("user with id %d not found", re.ID)
-				return errors.New("user not found")
+				return ErrUserNotFound
 			} else {
 				c.l.Errorf("controller.DeleteUser: unexpected error in repo.Delete: %v", err)
 				return errors.New("unexpected error")
@@ -134,7 +136,7 @@ func (c *User) RegenerateLogo(id int) error {
 		re, ok := err.(*mock.ErrUserNotFound)
 		if ok {
 			c.l.Errorf("user with id %d not found", re.ID)
-			return errors.New("user not found")
+			return ErrUserNotFound
 		} else {
 			c.l.Errorf("controller.RegenerateLogo: unexpected error in repo.Get: %v", err)
 			return errors.New("unexpected error")
@@ -152,7 +154,7 @@ func (c *User) RegenerateLogo(id int) error {
 		re, ok := err.(*mock.ErrUserNotFound)
 		if ok {
 			c.l.Errorf("user with id %d not found", re.ID)
-			return errors.New("user not found")
+			return ErrUserNotFound
 		} else if err == mock.ErrUserUnapdatable {
 			return errors.New("user can't be updated")
 		} else {
@@ -161,4 +163,24 @@ func (c *User) RegenerateLogo(id int) error {
 		}
 	}
 	return nil
+}
+
+func (c *User) CheckCredentials(email, password string) (int, error) {
+	m, err := c.repo.GetByEmail(email)
+	if err != nil {
+		_, ok := err.(*mock.ErrUserNotFound)
+		if ok {
+			c.l.Errorf("user with email %s not found", email)
+			return -1, ErrUserNotFound
+		} else {
+			c.l.Errorf("controller.CheckCredentials: unexpected error in repo.GetByEmail: %v", err)
+			return -1, errors.New("unexpected error")
+		}
+	}
+
+	if m.Password != password {
+		return -1, ErrWrongPassword
+	}
+
+	return m.ID, nil
 }
