@@ -73,6 +73,19 @@ definitions:
       pfp:
         type: string
     type: object
+  httpserver.HttpUpdateUserPost:
+    properties:
+      email:
+        type: string
+      first_name:
+        type: string
+      id:
+        type: integer
+      last_name:
+        type: string
+      password:
+        type: string
+    type: object
   httpserver.LoginUser.HttpLoginUserPostResponse:
     properties:
       token:
@@ -239,7 +252,7 @@ paths:
       tags:
       - users
   /user/me:
-    post:
+    get:
       description: Get authenticated user info from jwt
       operationId: GetUserInfo
       parameters:
@@ -265,10 +278,6 @@ paths:
                 message:
                   type: string
               type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/httpserver.HttpError'
         "401":
           description: Unauthorized
           schema:
@@ -320,6 +329,60 @@ paths:
           schema:
             $ref: '#/definitions/httpserver.HttpError'
       summary: Register a new user
+      tags:
+      - users
+  /user/update:
+    post:
+      description: |-
+        Update user info from jwt, if you are an admin you can update any user given the id
+        A normal user can only update himself, an admin can update any user
+        You don't have to send all the fields, only the ones you want to update with the new values
+        If the ID is not specified the user the update will be applied to the requesting user (only for admins, normal users can't update other users)
+      operationId: UpdateUser
+      parameters:
+      - default: Bearer xxx.xxx.xxx
+        description: jwt token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: users information to update
+        in: body
+        name: user_info
+        required: true
+        schema:
+          $ref: '#/definitions/httpserver.HttpUpdateUserPost'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/httpserver.HttpSuccess'
+            - properties:
+                code:
+                  type: integer
+                message:
+                  type: string
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/httpserver.HttpError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/httpserver.HttpError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/httpserver.HttpError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/httpserver.HttpError'
+      summary: Update user
       tags:
       - users
 swagger: "2.0"
