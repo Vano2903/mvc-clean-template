@@ -31,6 +31,14 @@ type (
 		Password  string `json:"password"`
 	}
 
+	HttpUpdateUserPost struct {
+		ID        int    `json:"id,omitempty" validate:"optional"`
+		FirstName string `json:"first_name,omitempty" validate:"optional"`
+		LastName  string `json:"last_name,omitempty" validate:"optional"`
+		Email     string `json:"email,omitempty" validate:"optional"`
+		Password  string `json:"password,omitempty" validate:"optional"`
+	}
+
 	HttpLoginUserPost struct {
 		Email    string `json:"email"`
 		Password string `json:"password"`
@@ -62,6 +70,7 @@ func (h *userHttpHandler) RegisterRoutes() {
 	h.e.POST("/login", h.LoginUser)
 
 	h.e.GET("/me", h.GetUserInfo, h.jwtHeaderCheckerMiddleware)
+	h.e.GET("/update", h.UpdateUser, h.jwtHeaderCheckerMiddleware)
 }
 
 // @Summary		Get user from ID
@@ -219,11 +228,10 @@ func (h *userHttpHandler) LoginUser(c echo.Context) error {
 // @Produce		json
 // @Param Authorization header string  true "jwt token"     default(Bearer xxx.xxx.xxx)
 // @Success		200			{object}	HttpSuccess{data=model.User,code=int,message=string}
-// @Failure		400			{object}	HttpError
 // @Failure		401			{object}	HttpError
 // @Failure		404			{object}	HttpError
 // @Failure		500			{object}	HttpError
-// @Router			/user/me [POST]
+// @Router			/user/me [GET]
 func (h *userHttpHandler) GetUserInfo(c echo.Context) error {
 	//it wont panic because the middleware already checked it
 	authHeader := c.Request().Header.Get("Authorization")[7:]
@@ -245,4 +253,73 @@ func (h *userHttpHandler) GetUserInfo(c echo.Context) error {
 	}
 
 	return respSuccess(c, 200, "user succesfully retrived", user)
+}
+
+// @Summary		Update user
+// @Description	Update user info from jwt, if you are an admin you can update any user given the id
+// @Description A normal user can only update himself, an admin can update any user
+// @Description You don't have to send all the fields, only the ones you want to update with the new values
+// @Description If the ID is not specified the user the update will be applied to the requesting user (only for admins, normal users can't update other users)
+// @ID				UpdateUser
+// @Tags			users
+// @Produce		json
+// @Param Authorization header string  true "jwt token"     default(Bearer xxx.xxx.xxx)
+// @Param		user_info	body		HttpUpdateUserPost	true	"users information to update"
+// @Success		200			{object}	HttpSuccess{code=int,message=string}
+// @Failure		400			{object}	HttpError
+// @Failure		401			{object}	HttpError
+// @Failure		404			{object}	HttpError
+// @Failure		500			{object}	HttpError
+// @Router			/user/update [POST]
+func (h *userHttpHandler) UpdateUser(c echo.Context) error {
+	authHeader := c.Request().Header.Get("Authorization")[7:]
+	claims, err := h.j.ValidateToken(authHeader)
+	if err != nil {
+		return respError(c, 401, "invalid token", "invalid token", "invalid_token")
+	}
+
+	body := HttpUpdateUserPost{}
+	if err := c.Bind(&body); err != nil {
+		return respError(c, 400, "invalid body", fmt.Sprintf("invalid body: %v", err), "invalid_body")
+	}
+
+	toUpdateID := claims.UserId
+	if body.ID != 0 {
+		toUpdateID = body.ID
+	}
+
+	toUpdate, err := h.controller.GetUser(toUpdateID)
+	if err != nil {
+		if err == controller.ErrUserNotFound {
+			_, err := h.controller.GetUser(claims.UserId)
+			if err != nil {
+				//this is an extreme case, if the user deleted the account the related jwt should be deleted aswell by putting it in a blacklist
+				return respError(c, 404, "user not found", "the jwt references an user that does not exist, maybe the user deleted the account", "user_not_found")
+			} else {
+				return respError(c, 404, "user not found", fmt.Sprintf("there is no user with %d as id", toUpdateID), "user_not_found")
+			}
+		} else {
+			return respError(c, 500, "unexpected error", fmt.Sprintf("unexpected error trying to retrive user %d", toUpdateID), "unexpected_error")
+		}
+	}
+
+	if body.FirstName != "" {
+		toUpdate.FirstName = body.FirstName
+	} else if body.LastName != "" {
+		toUpdate.LastName = body.LastName
+	} else if body.Email != "" {
+		toUpdate.Email = body.Email
+	} else if body.Password != "" {
+		toUpdate.Password = body.Password
+	}
+
+	if err := h.controller.UpdateUser(claims.UserId, toUpdate); err != nil {
+		if err == controller.ErrUnupdatableUser {
+			return respError(c, 400, "unupdatable user", "the user you are trying to update is not updatable", "unupdatable_user")
+		} else {
+			//we are excluding user not found because we already checked it
+			return respError(c, 500, "unexpected error", fmt.Sprintf("unexpected error trying to update user %d", toUpdateID), "unexpected_error")
+		}
+	}
+	return respSuccess(c, 200, "user succesfully updated")
 }
