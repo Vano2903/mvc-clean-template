@@ -16,6 +16,8 @@ var (
 	ErrUserAlreadyExists = errors.New("user already exists")
 	ErrUserNotFound      = errors.New("user not found")
 	ErrWrongPassword     = errors.New("wrong password")
+	ErrUnexpected        = errors.New("unexpected error")
+	ErrUnupdatableUser   = errors.New("user can't be updated")
 )
 
 type User struct {
@@ -73,11 +75,11 @@ func (c *User) UpdateUser(requesterId int, u *model.User) error {
 		re, ok := err.(*mock.ErrUserNotFound)
 		if ok {
 			//here we log the error and return a generic one
-			c.l.Errorf("user with id %d not found", re.ID)
+			c.l.Errorf("update requester with id %d not found", re.ID)
 			return ErrUserNotFound
 		} else {
 			c.l.Errorf("controller.UpdateUser: unexpected error in repo.Get: %v", err)
-			return errors.New("unexpected error")
+			return ErrUnexpected
 		}
 	}
 
@@ -86,15 +88,13 @@ func (c *User) UpdateUser(requesterId int, u *model.User) error {
 		if err != nil {
 			re, ok := err.(*mock.ErrUserNotFound)
 			if ok {
-				c.l.Errorf("user with id %d not found", re.ID)
+				c.l.Errorf("user to update with id %d not found", re.ID)
 				return ErrUserNotFound
-
 			} else if err == mock.ErrUserUnapdatable {
-				return errors.New("user can't be updated")
-
+				return ErrUnupdatableUser
 			} else {
 				c.l.Errorf("controller.UpdateUser: unexpected error in repo.Update: %v", err)
-				return errors.New("unexpected error")
+				return ErrUnexpected
 			}
 		}
 	}
@@ -110,7 +110,7 @@ func (c *User) DeleteUser(requesterId, id int) error {
 			return ErrUserNotFound
 		} else {
 			c.l.Errorf("controller.DeleteUser: unexpected error in repo.Get: %v", err)
-			return errors.New("unexpected error")
+			return ErrUnexpected
 		}
 	}
 
@@ -123,7 +123,7 @@ func (c *User) DeleteUser(requesterId, id int) error {
 				return ErrUserNotFound
 			} else {
 				c.l.Errorf("controller.DeleteUser: unexpected error in repo.Delete: %v", err)
-				return errors.New("unexpected error")
+				return ErrUnexpected
 			}
 		}
 	}
@@ -139,14 +139,14 @@ func (c *User) RegenerateLogo(id int) error {
 			return ErrUserNotFound
 		} else {
 			c.l.Errorf("controller.RegenerateLogo: unexpected error in repo.Get: %v", err)
-			return errors.New("unexpected error")
+			return ErrUnexpected
 		}
 	}
 
 	m.Pfp, err = c.logo.GenerateLogo()
 	if err != nil {
 		c.l.Errorf("controller.RegenerateLogo: unexpected error in logo.GenerateLogo: %v", err)
-		return errors.New("unexpected error")
+		return ErrUnexpected
 	}
 
 	err = c.repo.Update(m)
@@ -156,10 +156,10 @@ func (c *User) RegenerateLogo(id int) error {
 			c.l.Errorf("user with id %d not found", re.ID)
 			return ErrUserNotFound
 		} else if err == mock.ErrUserUnapdatable {
-			return errors.New("user can't be updated")
+			return ErrUnupdatableUser
 		} else {
 			c.l.Errorf("controller.RegenerateLogo: unexpected error in repo.Update: %v", err)
-			return errors.New("unexpected error")
+			return ErrUnexpected
 		}
 	}
 	return nil
@@ -174,7 +174,7 @@ func (c *User) CheckCredentials(email, password string) (int, error) {
 			return -1, ErrUserNotFound
 		} else {
 			c.l.Errorf("controller.CheckCredentials: unexpected error in repo.GetByEmail: %v", err)
-			return -1, errors.New("unexpected error")
+			return -1, ErrUnexpected
 		}
 	}
 
