@@ -272,15 +272,15 @@
         },
         "/user/update": {
             "post": {
-                "description": "Update user info from jwt, if you are an admin you can update any user given the id\nA normal user can only update himself, an admin can update any user\nYou don't have to send all the fields, only the ones you want to update with the new values\nIf the ID is not specified the user the update will be applied to the requesting user (only for admins, normal users can't update other users)",
+                "description": "Automatically regnerate user's profile picture\nNormal user do not need to specify anything, admins can specify a userid to update",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "users"
                 ],
-                "summary": "Update user",
-                "operationId": "UpdateUser",
+                "summary": "Regenerate user's pfp",
+                "operationId": "RegeneratePfpUrl",
                 "parameters": [
                     {
                         "type": "string",
@@ -291,13 +291,10 @@
                         "required": true
                     },
                     {
-                        "description": "users information to update",
-                        "name": "user_info",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/httpserver.HttpUpdateUserPost"
-                        }
+                        "type": "integer",
+                        "description": "id of the user to update",
+                        "name": "userid",
+                        "in": "path"
                     }
                 ],
                 "responses": {
@@ -313,6 +310,9 @@
                                     "properties": {
                                         "code": {
                                             "type": "integer"
+                                        },
+                                        "data": {
+                                            "$ref": "#/definitions/httpserver.RegeneratePfpUrl.HttpNewPfp"
                                         },
                                         "message": {
                                             "type": "string"
@@ -548,6 +548,14 @@
             "type": "object",
             "properties": {
                 "token": {
+                    "type": "string"
+                }
+            }
+        },
+        "httpserver.RegeneratePfpUrl.HttpNewPfp": {
+            "type": "object",
+            "properties": {
+                "new_pfp": {
                     "type": "string"
                 }
             }

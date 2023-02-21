@@ -91,6 +91,11 @@ definitions:
       token:
         type: string
     type: object
+  httpserver.RegeneratePfpUrl.HttpNewPfp:
+    properties:
+      new_pfp:
+        type: string
+    type: object
   model.User:
     properties:
       email:
@@ -334,11 +339,9 @@ paths:
   /user/update:
     post:
       description: |-
-        Update user info from jwt, if you are an admin you can update any user given the id
-        A normal user can only update himself, an admin can update any user
-        You don't have to send all the fields, only the ones you want to update with the new values
-        If the ID is not specified the user the update will be applied to the requesting user (only for admins, normal users can't update other users)
-      operationId: UpdateUser
+        Automatically regnerate user's profile picture
+        Normal user do not need to specify anything, admins can specify a userid to update
+      operationId: RegeneratePfpUrl
       parameters:
       - default: Bearer xxx.xxx.xxx
         description: jwt token
@@ -346,12 +349,10 @@ paths:
         name: Authorization
         required: true
         type: string
-      - description: users information to update
-        in: body
-        name: user_info
-        required: true
-        schema:
-          $ref: '#/definitions/httpserver.HttpUpdateUserPost'
+      - description: id of the user to update
+        in: path
+        name: userid
+        type: integer
       produces:
       - application/json
       responses:
@@ -363,6 +364,8 @@ paths:
             - properties:
                 code:
                   type: integer
+                data:
+                  $ref: '#/definitions/httpserver.RegeneratePfpUrl.HttpNewPfp'
                 message:
                   type: string
               type: object
@@ -382,7 +385,7 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/httpserver.HttpError'
-      summary: Update user
+      summary: Regenerate user's pfp
       tags:
       - users
 swagger: "2.0"
