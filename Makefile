@@ -42,5 +42,11 @@ lint: ### check by golangci linter
 .PHONY: linter-golangci
 
 test: ### run test
-	go test -v -cover -race ./internal/...
+	go test -v github.com/vano2903/service-template/controller/tests
 .PHONY: test
+
+update: ### update dependencies
+	go get -u
+	go mod tidy
+.PHONY: update
+
