@@ -8,6 +8,7 @@
 - [What does the code do?](#what-does-the-code-do)
 - [How to run the code?](#how-to-run-the-code)
 - [Structure](#structure)
+- [Recommendations](#recommendations)
 
 ## Introduction
 
@@ -16,14 +17,23 @@ Some of the code is inspired by [everone/go-clean-template](https://github.com/e
 
 ## What does the code do
 
-The code is a simple REST API that allows you to create, read, update and delete users.
+The code is a simple REST API that allows you to create, read, update users.
 There are admins and regular users.
 Admins can do everything, regular users can only read and update their own data.
 If you want a better documentation of the API you can check the [swagger file](/blob/master/docs/swagger.yaml) or you can run the server and go to `localhost:8080/swagger/index.html` to see the documentation.
+Not all functionalities are implemented as the code is not the main focus of this example.
 
 ## How to run the code?
 
 After cloning the repo you need to run the following commands:
+
+**using make**:
+
+```
+make run
+```
+
+**using go**:
 
 ```
 go mod download
@@ -36,6 +46,8 @@ or you can use docker:
 docker build -t mvc-clean-template .
 docker run -p 8080:8080 mvc-clean-template
 ```
+
+_p.s. you can run `make docker` to build the docker image and run it._
 
 ## Structure
 
