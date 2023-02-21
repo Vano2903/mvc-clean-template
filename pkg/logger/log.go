@@ -8,7 +8,10 @@ func NewLogger(level, logType string) *logrus.Logger {
 	logger := logrus.New()
 
 	if logType == "text" {
-		logger.SetFormatter(&logrus.TextFormatter{})
+		logger.SetFormatter(&logrus.TextFormatter{
+			FullTimestamp: true,
+			ForceColors:   true,
+		})
 	} else {
 		logger.SetFormatter(&logrus.JSONFormatter{})
 	}
