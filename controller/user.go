@@ -134,7 +134,7 @@ func (c *User) DeleteUser(requesterId, id int) error {
 	return nil
 }
 
-func (c *User) RegenerateLogo(id int) error {
+func (c *User) RegeneratePfp(id int) error {
 	m, err := c.repo.Get(id)
 	if err != nil {
 		re, ok := err.(*mock.ErrUserNotFound)

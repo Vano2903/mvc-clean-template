@@ -365,7 +365,7 @@ func (h *userHttpHandler) RegeneratePfpUrl(c echo.Context) error {
 		}
 	}
 
-	if err := h.controller.RegenerateLogo(userIdToUpdate); err != nil {
+	if err := h.controller.RegeneratePfp(userIdToUpdate); err != nil {
 		if err == controller.ErrUserNotFound {
 			return respError(c, 404, "user not found", fmt.Sprintf("there is no user with %d as id", userIdToUpdate), "user_not_found")
 		} else if err == controller.ErrUnupdatableUser {
