@@ -37,9 +37,9 @@ func NewUserController(repo repo.UserRepoer, logo logo.LogoServicer, log *logrus
 func (c *User) CreateUser(firstName, lastName, email, password, role string) (int, error) {
 
 	//here we check if the user already exists
-	_, err := c.repo.GetByEmail(email)
+	u, err := c.repo.GetByEmail(email)
 	if err == nil {
-		return -1, ErrUserAlreadyExists
+		return u.ID, ErrUserAlreadyExists
 	}
 
 	m := &model.User{
@@ -53,7 +53,7 @@ func (c *User) CreateUser(firstName, lastName, email, password, role string) (in
 	m.Pfp, err = c.logo.GenerateLogo()
 	if err != nil {
 		c.l.Errorf("controller.CreateUser: unexpected error in logo.GenerateLogo: %v", err)
-		return -1, errors.New("unexpected error when generating logo")
+		return u.ID, errors.New("unexpected error when generating logo")
 	}
 	return c.repo.Create(m)
 }
@@ -81,6 +81,10 @@ func (c *User) UpdateUser(requesterId int, u *model.User) error {
 			c.l.Errorf("controller.UpdateUser: unexpected error in repo.Get: %v", err)
 			return ErrUnexpected
 		}
+	}
+
+	if u.ID <= 0 {
+		return errors.New("missing id from user to update")
 	}
 
 	if requester.ID == u.ID || requester.Role == model.RoleAdmin {
