@@ -267,14 +267,40 @@ func TestUpdateUser(t *testing.T) {
 	})
 }
 
-func GenerateExampleEntries(l *logrus.Logger, c *controller.User) {
-	if _, err := c.CreateUser("Davide", "Vanoncini", "davidevanoncini2003@gmail.com", "password", model.RoleAdmin); err != nil {
-		l.Fatal("unable to create test user")
+// regenerate user's logo
+func TestRegenerateLogo(t *testing.T) {
+	firstName := "name"
+	lastName := "lastname"
+	email := "test@test.com"
+	password := "password"
+
+	id, err := c.CreateUser(firstName, lastName, email, password, model.RoleUser)
+	if err != nil {
+		t.Errorf("unable to create user: %v", err)
 	}
-	if _, err := c.CreateUser("John", "Doe", "johndoe@bingchilling.cn", "123secure", model.RoleUser); err != nil {
-		l.Fatal("unable to create test user")
+
+	u, err := r.Get(id)
+	if err != nil {
+		t.Errorf("unable to get user from repo: %v", err)
 	}
-	if _, err := c.CreateUser("Foo", "Bar", "foo@bar.com", "psw1", model.RoleUnupdatable); err != nil {
-		l.Fatal("unable to create test user")
+	prevLogo := u.Pfp
+
+	if err := c.RegeneratePfp(id); err != nil {
+		t.Errorf("unable to regenerate logo: %v", err)
 	}
+
+	u, err = r.Get(id)
+	if err != nil {
+		t.Errorf("unable to get user from repo: %v", err)
+	}
+
+	if u.Pfp == prevLogo {
+		t.Error("logo was not regenerated")
+	}
+
+	t.Cleanup(func() {
+		if err := r.Delete(id); err != nil {
+			t.Errorf("error cleaning up test case: %v", err)
+		}
+	})
 }
