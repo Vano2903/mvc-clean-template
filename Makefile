@@ -47,5 +47,10 @@ update: ### update dependencies
 	go mod tidy
 .PHONY: update
 
+docker: ### build and run docker image
+	docker build -t service-template .
+	docker run -p 8080:8080 service-template
+.PHONY: docker
+
 prep: fmt swag lint test ### run all checks before commit
 .PHONY: prep
