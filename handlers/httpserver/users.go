@@ -12,6 +12,10 @@ import (
 	"github.com/vano2903/service-template/repo/mock"
 )
 
+const (
+	bearerHeaderLength = 7
+)
+
 type (
 	// Here we declare a user model that will be returned by the api
 	// to any unauthorized user as some informations should be visible only to admins
@@ -234,7 +238,7 @@ func (h *userHttpHandler) LoginUser(c echo.Context) error {
 // @Router			/user/me [GET]
 func (h *userHttpHandler) GetUserInfo(c echo.Context) error {
 	//it wont panic because the middleware already checked it
-	authHeader := c.Request().Header.Get("Authorization")[7:]
+	authHeader := c.Request().Header.Get("Authorization")[bearerHeaderLength:]
 
 	//we do not do the full check as the middleware already did it
 	//we just get the claims and handle the error
@@ -272,7 +276,7 @@ func (h *userHttpHandler) GetUserInfo(c echo.Context) error {
 // @Failure		500			{object}	HttpError
 // @Router			/user/update [POST]
 func (h *userHttpHandler) UpdateUser(c echo.Context) error {
-	authHeader := c.Request().Header.Get("Authorization")[7:]
+	authHeader := c.Request().Header.Get("Authorization")[bearerHeaderLength:]
 	claims, err := h.j.ValidateToken(authHeader)
 	if err != nil {
 		return respError(c, 401, "invalid token", "invalid token", "invalid_token")
@@ -322,4 +326,57 @@ func (h *userHttpHandler) UpdateUser(c echo.Context) error {
 		}
 	}
 	return respSuccess(c, 200, "user succesfully updated")
+}
+
+// @Summary Regenerate user's pfp
+// @Description Automatically regnerate user's profile picture
+// @Description Normal user do not need to specify anything, admins can specify a userid to update
+// @ID				RegeneratePfpUrl
+// @Tags			users
+// @Produce		json
+// @Param Authorization header string  true "jwt token"     default(Bearer xxx.xxx.xxx)
+// @Param		userid	path		int	false	"id of the user to update"
+// @Success		200			{object}	HttpSuccess{data=httpserver.RegeneratePfpUrl.HttpNewPfp,code=int,message=string}
+// @Failure		400			{object}	HttpError
+// @Failure		401			{object}	HttpError
+// @Failure		404			{object}	HttpError
+// @Failure		500			{object}	HttpError
+// @Router			/user/update [POST]
+func (h *userHttpHandler) RegeneratePfpUrl(c echo.Context) error {
+	authHeader := c.Request().Header.Get("Authorization")[bearerHeaderLength:]
+	claims, err := h.j.ValidateToken(authHeader)
+	if err != nil {
+		return respError(c, 401, "invalid token", "invalid token", "invalid_token")
+	}
+	u, err := h.controller.GetUser(claims.UserId)
+	if err != nil {
+		return respError(c, 404, "user not found", "the jwt references an user that does not exist, maybe the user deleted the account", "user_not_found")
+	}
+	userIdToUpdate := claims.UserId
+
+	if c.Param("userid") != "" {
+		if u.Role != model.RoleAdmin {
+			return respError(c, 401, "unauthorized", "only admins can update other users", "unauthorized_update")
+		} else {
+			userIdToUpdate, err = strconv.Atoi(c.Param("userid"))
+			if err != nil {
+				return respError(c, 400, "invalid userid", "the userid must be an integer", "invalid_userid")
+			}
+		}
+	}
+
+	if err := h.controller.RegenerateLogo(userIdToUpdate); err != nil {
+		if err == controller.ErrUserNotFound {
+			return respError(c, 404, "user not found", fmt.Sprintf("there is no user with %d as id", userIdToUpdate), "user_not_found")
+		} else if err == controller.ErrUnupdatableUser {
+			return respError(c, 400, "unupdatable user", "the user you are trying to update is not updatable", "unupdatable_user")
+		} else {
+			return respError(c, 500, "unexpected error", fmt.Sprintf("unexpected error trying to update user %d", userIdToUpdate), "unexpected_error")
+		}
+	}
+	type HttpNewPfp struct {
+		NewPfp string `json:"new_pfp"`
+	}
+	u, _ = h.controller.GetUser(userIdToUpdate)
+	return respSuccess(c, 200, "user succesfully updated with a new profile picture", HttpNewPfp{NewPfp: u.Pfp})
 }
