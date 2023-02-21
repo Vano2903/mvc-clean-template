@@ -24,7 +24,8 @@ swag: ### swag init
 
 
 run: fmt swag ### regenerate swag docs, check module and run go code
-	go mod tidy && go mod download && \
+	go mod tidy
+	go mod download
 	go run .
 .PHONY: run
 
@@ -32,10 +33,6 @@ fmt: ### format swag docs, go mod and code
 	go mod tidy 
 	go fmt .
 .PHONY: fmt
-
-docker-rm-volume: ### remove docker volume
-	docker volume rm go-clean-template_pg-data
-.PHONY: docker-rm-volume
 
 lint: ### check by golangci linter
 	golangci-lint run
@@ -50,3 +47,5 @@ update: ### update dependencies
 	go mod tidy
 .PHONY: update
 
+prep: fmt swag lint test ### run all checks before commit
+.PHONY: prep
