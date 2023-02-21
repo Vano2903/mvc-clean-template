@@ -1,6 +1,9 @@
 package httpserver
 
 import (
+	"fmt"
+	"net/http"
+
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -29,6 +32,11 @@ import (
 func InitRouter(e *echo.Echo, l *logrus.Logger, userController *controller.User, conf *config.Config) {
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
+
+	echo.NotFoundHandler = func(c echo.Context) error {
+		// render your 404 page
+		return respError(c, http.StatusNotFound, "invalid endpoint", fmt.Sprintf("endpoint %s is not handled", c.Request().URL.Path), "invalid_endpoint")
+	}
 
 	e.GET("/swagger/*", echoSwagger.WrapHandler)
 	e.GET("/metrics", echo.WrapHandler(promhttp.Handler()))
